@@ -1,0 +1,21 @@
+# This policy uses the Sentinel tfplan/v2 import to require that
+# all EFS filesystem resources created to be encrypted at creation
+
+# Import common-functions/tfplan-functions/tfplan-functions.sentinel
+# with alias "plan"
+import "tfplan-functions" as plan
+
+# Get all EFS filesystem
+allEFSFileSystem = plan.find_resources("aws_efs_file_system")
+
+# Filter to AWS services that set to public ip
+# Warnings will be printed for all violations since the last parameter is true
+unencryptedEFS = plan.filter_attribute_is_not_value(allEFSFileSystem,
+	"encrypted",
+	true, true)
+
+# Main rule - we want no public setting to be found
+validated = length(unencryptedEFS["messages"]) is 0
+main = rule {
+	validated is true
+}

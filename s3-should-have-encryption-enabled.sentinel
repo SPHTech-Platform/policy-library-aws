@@ -1,0 +1,27 @@
+# This policy uses the Sentinel tfplan/v2 import to require that
+# all S3 buckets have ACL "private" and be encrypted by a KMS key
+
+# Import common-functions/tfplan-functions/tfplan-functions.sentinel
+# with alias "plan"
+import "tfplan-functions" as plan
+
+# Get all S3 bucket acls
+allS3BucketsServerSideEnc = plan.find_resources("aws_s3_bucket_server_side_encryption_configuration")
+
+# Filter to S3 buckets that are not encrypted by KMS
+# Warnings will be printed for all violations since the last parameter is true
+
+nonKMSEncryptedS3Buckets = plan.filter_attribute_is_not_value(allS3BucketsServerSideEnc,
+	"rule.0.apply_server_side_encryption_by_default.0.sse_algorithm",
+	"aws:kms", false)
+
+nonAESEncryptedS3Buckets = plan.filter_attribute_is_not_value(allS3BucketsServerSideEnc,
+	"rule.0.apply_server_side_encryption_by_default.0.sse_algorithm",
+	"AES256", false)
+
+# Main rule
+# validated = length(nonPrivateS3Buckets["messages"]) is 0 and length(nonEncryptedS3Buckets["messages"]) is 0
+validated = length(nonKMSEncryptedS3Buckets["messages"]) is 0 or length(nonAESEncryptedS3Buckets["messages"]) is 0
+main = rule {
+	validated is true
+}

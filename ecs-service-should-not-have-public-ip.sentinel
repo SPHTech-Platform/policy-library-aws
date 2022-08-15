@@ -1,0 +1,21 @@
+# This policy uses the Sentinel tfplan/v2 import to require that
+# all ecs service to have its network config to either be empty or not set to public
+
+# Import common-functions/tfplan-functions/tfplan-functions.sentinel
+# with alias "plan"
+import "tfplan-functions" as plan
+
+# Get all ECS services
+allECSService = plan.find_resources("aws_ecs_service")
+
+# Filter to AWS services that set to public ip
+# Warnings will be printed for all violations since the last parameter is true
+publicECSService = plan.filter_attribute_is_value(allECSService,
+	"network_configuration.0.assign_public_ip",
+	true, true)
+
+# Main rule - we want no public setting to be found
+public_found = length(publicECSService["messages"]) is 0
+main = rule {
+	public_found is true
+}
