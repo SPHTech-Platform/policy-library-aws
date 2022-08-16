@@ -16,4 +16,5 @@ This library, provides prescriptive Terraform policies that can be used to estab
 -  Elasticsearch domains and node to node traffic are encrypted
 -  RDS DB instances are encrypted
 -  S3 buckets having server side encryption turned on
----
+
+Docs can be found in docs/policies folder
