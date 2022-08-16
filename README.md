@@ -7,7 +7,7 @@ This library, provides prescriptive Terraform policies that can be used to estab
 >
 ---
 
-## Policies included
+Policies included
 ---
 -  Ensure cloudtrails are encrypted
 -  Ensure EBS volumes created are encrypted (even if they are in launch templates)
