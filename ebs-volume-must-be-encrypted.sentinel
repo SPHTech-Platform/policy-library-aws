@@ -1,0 +1,29 @@
+# This policy uses the Sentinel tfplan/v2 import to require that
+# all EBS volumes should be encrypted
+
+# Import common-functions/tfplan-functions/tfplan-functions.sentinel
+# with alias "plan"
+import "tfplan-functions" as plan
+
+# Get all EBS Volumes
+allEBSVolumes = plan.find_resources("aws_ebs_volume")
+
+# Get all Launch Templates
+allLaunchTemplates = plan.find_resources("aws_launch_template")
+
+# Filter to EBS volumes that are not encrypted
+# Warnings will be printed for all violations since the last parameter is true
+
+nonEncryptedEBSVolumes = plan.filter_attribute_is_not_value(allEBSVolumes,
+	"encrypted",
+	true, false)
+
+nonEncryptedEBSVolumesInLaunchTemplates = plan.filter_attribute_is_not_value(allLaunchTemplates,
+	"block_device_mappings.0.ebs.0.encrypted",
+	"true", false)
+
+# Main rule
+validated = length(nonEncryptedEBSVolumes["messages"]) is 0 and length(nonEncryptedEBSVolumesInLaunchTemplates["messages"]) is 0
+main = rule {
+	validated is true
+}

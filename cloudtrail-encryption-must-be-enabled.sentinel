@@ -1,0 +1,22 @@
+# This policy uses the Sentinel tfplan/v2 import to require that
+# all cloudtrail resource creations should have a KMS ID attached to it
+
+# Import common-functions/tfplan-functions/tfplan-functions.sentinel
+# with alias "plan"
+import "tfplan-functions" as plan
+
+# Get all cloudtrails
+allCloudtrails = plan.find_resources("aws_cloudtrail")
+
+# Filter to Cloudtrails that are not encrypted
+# Warnings will be printed for all violations since the last parameter is true
+
+nonEncryptedCloudTrails = plan.filter_attribute_does_not_have_prefix(allCloudtrails,
+	"kms_key_id",
+	"arn:aws:kms", false)
+
+# Main rule
+validated = length(nonEncryptedCloudTrails["messages"]) is 0
+main = rule {
+	validated is true
+}
